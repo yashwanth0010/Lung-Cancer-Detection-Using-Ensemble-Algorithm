@@ -19,6 +19,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import normalize
 from sklearn import svm
+from sklearn.neighbors import KNeighborsClassifier 
 import pickle
 import os
 import cv2
@@ -81,7 +82,14 @@ def runEnsemble():
     dt = DecisionTreeClassifier()
     ada_boost = AdaBoostClassifier(n_estimators=100, random_state=0)
     mlp = MLPClassifier(max_iter=200,hidden_layer_sizes=100,random_state=42)
-    vc = VotingClassifier(estimators=[('dt', dt), ('ab', ada_boost), ('mlp', mlp)], voting='soft')
+    knn= KNeighborsClassifier(n_neighbors=5, metric='minkowski', p=2 ) 
+
+    knn.fit(X_train,y_train)
+    print("Knn result")
+    print(knn.predict(X_test))
+
+
+    vc = VotingClassifier(estimators=[('dt', dt), ('ab', ada_boost), ('mlp', mlp), ('knn',knn)], voting='soft')
     vc.fit(X_train, y_train)
     predict = vc.predict(X_test) 
     p = precision_score(y_test, predict,average='micro') * 100
