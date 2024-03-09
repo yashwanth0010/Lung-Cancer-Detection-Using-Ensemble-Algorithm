@@ -14,6 +14,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import normalize
 from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier 
+from sklearn.svm import SVC
+from sklearn.cluster import KMeans
 
 
 global filename
@@ -55,6 +57,8 @@ def runEnsemble():
     ada_boost = AdaBoostClassifier(n_estimators=100, random_state=0)
     mlp = MLPClassifier(max_iter=200,hidden_layer_sizes=100,random_state=42)
     knn= KNeighborsClassifier(n_neighbors=5, metric='minkowski', p=2 ) 
+    svm = SVC(kernel="rbf", gamma=0.5, C=1.0)
+    kmeans = KMeans(n_clusters=3, random_state= 42)  
 
     vc = VotingClassifier(estimators=[('dt', dt), ('ab', ada_boost), ('mlp', mlp),  ('knn',knn)] ,voting='soft')
     vc.fit(X_train, y_train)
@@ -70,20 +74,39 @@ def runEnsemble():
     mlp.fit(X_train,y_train)
     ada_boost.fit(X_train,y_train)
     knn.fit(X_train,y_train)
-    
+    svm.fit(X_train,y_train)
+    kmeans.fit(X_train,y_train)  
+
     dtr = dt.predict(X_test)
     mlr = mlp.predict(X_test)
     ada = ada_boost.predict(X_test)
     knr = knn.predict(X_test)
-
-    print("dt result           mlp result          ada result         knn result")
+    svr = svm.predict(X_test)
+    kmr = kmeans.predict(X_test)
+    print("dt result           mlp result          ada result         knn result        svm result       Kmeans result")
     for x in range(0,200):
         print(dtr[x] , end="                    ")
         print(mlr[x] , end="                    ")
         print(ada[x] , end="                    ")
-        print(knr[x])
+        print(knr[x], end="                    ")
+        print(svr[x] , end="                    ")
+        print(kmr[x])
 
     print("Ensemble completed")
+
+    dta = accuracy_score(y_test, dtr)
+    mlpa = accuracy_score(y_test, mlr)
+    adaa = accuracy_score(y_test, ada)
+    knna = accuracy_score(y_test, knr)
+    svma = accuracy_score(y_test, svr)
+    kma = accuracy_score(y_test, kmr)
+
+    print("accuracy of dt ", dta)
+    print("accuracy of mlp ", mlpa)
+    print("accuracy of ada ", adaa)
+    print("accuracy of knn ", knna)
+    print("accuracy of svm ", svma)
+    print("accuracy of kmeans ", kma)
     
 
 def predict():
