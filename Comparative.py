@@ -105,12 +105,12 @@ def runEnsemble():
     svma = accuracy_score(y_test, svr)
     kma = accuracy_score(y_test, kmr)
 
-    print("accuracy of dt ", dta)
-    print("accuracy of mlp ", mlpa)
-    print("accuracy of ada ", adaa)
-    print("accuracy of knn ", knna)
-    print("accuracy of svm ", svma)
-    print("accuracy of kmeans ", kma)
+    print("accuracy of dt ", dta*100)
+    print("accuracy of mlp ", mlpa*100)
+    print("accuracy of ada ", adaa*100)
+    print("accuracy of knn ", knna*100)
+    print("accuracy of svm ", svma*100)
+    print("accuracy of kmeans ", kma*100)
     
 
 def predict():

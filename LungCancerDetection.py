@@ -1,9 +1,11 @@
 from tkinter import messagebox
 from tkinter import *
 from tkinter.filedialog import askopenfilename
-from tkinter import simpledialog
+from tkinter import simpledialog,ttk
 import tkinter
+from pandastable import Table
 import numpy as np
+import time
 from tkinter import filedialog
 import pandas as pd 
 import matplotlib.pyplot as plt
@@ -23,6 +25,9 @@ from sklearn.neighbors import KNeighborsClassifier
 import pickle
 import os
 import cv2
+from Shadow import Shadow
+
+global main
 
 main = tkinter.Tk()
 main.title("Lung Cancer Detection Using Ensemble Algorithm")
@@ -34,10 +39,15 @@ global dataset
 global  X_train, X_test, y_train, y_test
 global classifier
 global rbf_classifier
+global pt
+global text
 
 def upload():
     global filename
     global dataset
+    global main
+    global pt
+    global text
     text.delete('1.0', END)
     filename = filedialog.askopenfilename(initialdir = "Dataset")
     text.delete('1.0', END)
@@ -46,12 +56,15 @@ def upload():
     dataset.fillna(0, inplace = True)
 
 
-    text.insert(END,str(dataset.head())+"\n\n")
-
-
-
+    '''text.insert(END,str(dataset.head())+"\n\n")
     text.insert(END,"Dataset contains total records    : "+str(dataset.shape[0])+"\n")
-    text.insert(END,"Dataset contains total attributes : "+str(dataset.shape[1])+"\n")
+    text.insert(END,"Dataset contains total attributes : "+str(dataset.shape[1])+"\n")'''
+
+    pt = Table(text,dataframe = dataset,width = 850, height=500)
+    pt.autoResizeColumns()
+    pt.show()
+    
+
     label = dataset.groupby('Level').size()
     colors = ["red","green","yellow"]
 
@@ -63,7 +76,17 @@ def upload():
 def processDataset():
     global X, Y
     global dataset
+    global pt
+    global text
+    
+    pt.remove()
+    text=Text(main,height=30,width=120)
+    text.config(font= ('times', 12, 'bold'))
+    scroll=Scrollbar(text)
+    text.configure(yscrollcommand=scroll.set)
+    text.place(x=10,y=160)
     text.delete('1.0', END)
+
     le = LabelEncoder()
     dataset['Level'] = pd.Series(le.fit_transform(dataset['Level'].astype(str)))
     dataset['Patient Id'] = pd.Series(le.fit_transform(dataset['Patient Id'].astype(str)))
@@ -74,17 +97,31 @@ def processDataset():
     X = normalize(X)
     print(X)
     print(Y)
-    text.insert(END,"Dataset contains total records : "+str(X.shape[0])+"\n")
-    text.insert(END,"Dataset contains total Features: "+str(X.shape[1])+"\n")
+
+    pt = Table(text,dataframe = dataset,width = 850, height=500)
+    pt.autoResizeColumns()
+    pt.show()
+
+    #text.insert(END,"Dataset contains total records : "+str(X.shape[0])+"\n")
+    #text.insert(END,"Dataset contains total Features: "+str(X.shape[1])+"\n")
     
     
 def runEnsemble():
-    global classifier
+    global classifier,text
     global  X_train, X_test, y_train, y_test
     global X, Y
+
+    pt.remove()
+    text=Text(main,height=30,width=120)
+    text.config(font= ('times', 12, 'bold'))
+    scroll=Scrollbar(text)
+    text.configure(yscrollcommand=scroll.set)
+    text.place(x=10,y=160)
     text.delete('1.0', END)
+
+
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
-    text.insert(END,"Total dataset records : "+str(X.shape[0])+"\n")
+    text.insert(END,"Total dataset records : "+str(X.shape[0])+"\n" )
     text.insert(END,"Total dataset records used to train algorithms : "+str(X_train.shape[0])+"\n")
     text.insert(END,"Total dataset records used to test algorithms  : "+str(X_test.shape[0])+"\n\n")
     dt = DecisionTreeClassifier()
@@ -114,6 +151,7 @@ def runEnsemble():
 
 def predict():
     global classifier
+    global text
     text.delete('1.0', END)
     filename = filedialog.askopenfilename(initialdir="Dataset")
     test = pd.read_csv(filename)
@@ -135,7 +173,7 @@ def predict():
         
 
 def trainRBF():
-    global rbf_classifier                         
+    global rbf_classifier,text               
     text.delete('1.0', END)
     filename = filedialog.askdirectory(initialdir = ".")
     if os.path.exists('model/model.txt'):
@@ -193,7 +231,7 @@ def trainRBF():
         file.close()
                
 def predictCTscan():
-    global rbf_classifier
+    global rbf_classifier,text
     text.delete('1.0', END)
     filename = filedialog.askopenfilename(initialdir="testImages")
     img = cv2.imread(filename)
@@ -226,37 +264,60 @@ def predictCTscan():
     plt.show()
     
 
-font = ('times', 20, 'bold')
+
+
+def changeOnHover(button, colorOnHover, colorOnLeave):
+    button.bind("<Enter>", func=lambda e: button.config(
+        background=colorOnHover))
+ 
+    button.bind("<Leave>", func=lambda e: button.config(
+        background=colorOnLeave))
+    
+
+font = ('times', 22, 'bold')
 title = Label(main, text='Lung Cancer Detection Using Ensemble Algorithm')
-title.config(bg='dark goldenrod', fg='white')  
+title.config(bg='#3F3E3E', fg='white')  
 title.config(font=font)           
-title.config(height=3, width=110)       
+title.config(height=3, width=100)       
 title.place(x=0,y=10)
 
 font1 = ('times', 14, 'bold')
 upload = Button(main, text="Upload Lung Cancer Dataset", command=upload)
 upload.place(x=1040,y=260)
-upload.config(font=font1)  
+upload.config(font=font1)
+changeOnHover(upload, "#6C9DDA", "white")  
+Shadow(upload, size=2, offset_x=2, offset_y=2, onhover={'size':4, 'offset_x':4, 'offset_y':4})
 
 processButton = Button(main, text="Dataset Preprocessing", command=processDataset)
-processButton.place(x=1040,y=310)
+processButton.place(x=1040,y=320)
 processButton.config(font=font1) 
+changeOnHover(processButton, "#6C9DDA", "white")  
+Shadow(processButton, size=2, offset_x=2, offset_y=2, onhover={'size':4, 'offset_x':4, 'offset_y':4})
+    
 
 eaButton = Button(main, text="Run Ensemble Algorithms", command=runEnsemble)
-eaButton.place(x=1040,y=360)
+eaButton.place(x=1040,y=380)
 eaButton.config(font=font1) 
+changeOnHover(eaButton, "#6C9DDA", "white")
+Shadow(eaButton, size=2, offset_x=2, offset_y=2, onhover={'size':4, 'offset_x':4, 'offset_y':4})
 
 predictButton = Button(main, text="Predict Lung Cancer Disease", command=predict)
-predictButton.place(x=1040,y=410)
+predictButton.place(x=1040,y=440)
 predictButton.config(font=font1)
+changeOnHover(predictButton, "#6C9DDA", "white")
+Shadow(predictButton, size=2, offset_x=2, offset_y=2, onhover={'size':4, 'offset_x':4, 'offset_y':4})
 
 rbfButton = Button(main, text="Train RBF on Lungs CT-Scan Images", command=trainRBF)
-rbfButton.place(x=1040,y=460)
+rbfButton.place(x=1040,y=510)
 rbfButton.config(font=font1)
+changeOnHover(rbfButton, "#6C9DDA", "white")
+Shadow(rbfButton, size=2, offset_x=2, offset_y=2, onhover={'size':4, 'offset_x':4, 'offset_y':4})
 
 predictButton = Button(main, text="Predict Cancer from CT-Scan", command=predictCTscan)
-predictButton.place(x=1040,y=510)
+predictButton.place(x=1040,y=570)
 predictButton.config(font=font1)
+changeOnHover(predictButton, "#6C9DDA", "white")
+Shadow(predictButton, size=2, offset_x=2, offset_y=2, onhover={'size':4, 'offset_x':4, 'offset_y':4})
 
 font1 = ('times', 12, 'bold')
 text=Text(main,height=30,width=120)
@@ -266,6 +327,6 @@ text.place(x=10,y=160)
 text.config(font=font1)
 
 
-main.config(bg='turquoise')
+main.config(bg="#3F3E3E")
 main.mainloop()
 
