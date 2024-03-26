@@ -41,15 +41,23 @@ def upload():
     text.delete('1.0', END)
     filename = filedialog.askopenfilename(initialdir = "Dataset")
     text.delete('1.0', END)
-    text.insert(END,filename+' dataset loaded\n')
+    text.insert(END,'Dataset loaded\n\n')
     dataset = pd.read_csv(filename)
     dataset.fillna(0, inplace = True)
-    text.insert(END,str(dataset.head())+"\n")
+
+
+    text.insert(END,str(dataset.head())+"\n\n")
+
+
+
     text.insert(END,"Dataset contains total records    : "+str(dataset.shape[0])+"\n")
     text.insert(END,"Dataset contains total attributes : "+str(dataset.shape[1])+"\n")
     label = dataset.groupby('Level').size()
     colors = ["red","green","yellow"]
-    label.plot(kind="bar", color = colors)
+
+    plt.bar(label.keys(), label.values,color = colors)
+    plt.ylabel('Values')
+    plt.title("Lung Cancer Dataset")
     plt.show()
 
 def processDataset():
@@ -211,50 +219,53 @@ def predictCTscan():
     if(msg == "Uploaded CT Scan is Normal"):
         cv2.putText(img, msg, (10, 25),  cv2.FONT_HERSHEY_SIMPLEX,0.7, (51, 204, 51), 2)
     else:
-        cv2.putText(img, msg, (10, 25),  cv2.FONT_HERSHEY_SIMPLEX,0.7, (0,0,255), 2)
-    cv2.imshow(msg, img)
-    cv2.waitKey(0)    
+        cv2.putText(img, msg, (10, 25),  cv2.FONT_HERSHEY_SIMPLEX,0.7, (255,0,0), 2)
+    #cv2.imshow(msg, img)
+    #cv2.waitKey(0)   
+    plt.imshow(img) 
+    plt.show()
     
 
-font = ('times', 16, 'bold')
+font = ('times', 20, 'bold')
 title = Label(main, text='Lung Cancer Detection Using Ensemble Algorithm')
 title.config(bg='dark goldenrod', fg='white')  
 title.config(font=font)           
-title.config(height=3, width=120)       
-title.place(x=0,y=5)
+title.config(height=3, width=110)       
+title.place(x=0,y=10)
 
 font1 = ('times', 14, 'bold')
 upload = Button(main, text="Upload Lung Cancer Dataset", command=upload)
-upload.place(x=950,y=100)
+upload.place(x=1040,y=260)
 upload.config(font=font1)  
 
 processButton = Button(main, text="Dataset Preprocessing", command=processDataset)
-processButton.place(x=950,y=150)
+processButton.place(x=1040,y=310)
 processButton.config(font=font1) 
 
 eaButton = Button(main, text="Run Ensemble Algorithms", command=runEnsemble)
-eaButton.place(x=950,y=200)
+eaButton.place(x=1040,y=360)
 eaButton.config(font=font1) 
 
 predictButton = Button(main, text="Predict Lung Cancer Disease", command=predict)
-predictButton.place(x=950,y=250)
+predictButton.place(x=1040,y=410)
 predictButton.config(font=font1)
 
 rbfButton = Button(main, text="Train RBF on Lungs CT-Scan Images", command=trainRBF)
-rbfButton.place(x=950,y=300)
+rbfButton.place(x=1040,y=460)
 rbfButton.config(font=font1)
 
 predictButton = Button(main, text="Predict Cancer from CT-Scan", command=predictCTscan)
-predictButton.place(x=950,y=350)
+predictButton.place(x=1040,y=510)
 predictButton.config(font=font1)
 
 font1 = ('times', 12, 'bold')
-text=Text(main,height=30,width=110)
+text=Text(main,height=30,width=120)
 scroll=Scrollbar(text)
 text.configure(yscrollcommand=scroll.set)
-text.place(x=10,y=100)
+text.place(x=10,y=160)
 text.config(font=font1)
 
 
 main.config(bg='turquoise')
 main.mainloop()
+

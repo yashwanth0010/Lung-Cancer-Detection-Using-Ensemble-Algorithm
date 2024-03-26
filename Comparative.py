@@ -67,6 +67,10 @@ def runEnsemble():
     r = recall_score(y_test, predict,average='micro') * 100
     f = f1_score(y_test, predict,average='micro') * 100
     a = accuracy_score(y_test,predict)*100
+    print(p)
+    print(r)
+    print(f)
+    print(a)
     classifier = vc
 
     
