@@ -1,7 +1,6 @@
 from tkinter import messagebox
 from tkinter import *
 from tkinter.filedialog import askopenfilename
-from tkinter import simpledialog,ttk
 import tkinter
 from pandastable import Table
 import numpy as np
@@ -27,38 +26,39 @@ import os
 import cv2
 from Shadow import Shadow
 
-global main
+global main,filename,dataset, X_train, X_test, y_train, y_test,classifier,rbf_classifier,pt
 
 main = tkinter.Tk()
 main.title("Lung Cancer Detection Using Ensemble Algorithm")
 main.geometry("1920x1080")
 
 
-global filename
-global dataset
-global  X_train, X_test, y_train, y_test
-global classifier
-global rbf_classifier
-global pt
-global text
+def Output(height=30,width=120,x=10,y=160):
+    font1 = ('times', 12, 'bold')
+    text=Text(main,height=height,width=width)
+    scroll=Scrollbar(text)
+    text.configure(yscrollcommand=scroll.set)
+    text.place(x=x,y=y)
+    text.config(font=font1)
+    return text
 
 def upload():
     global filename
     global dataset
     global main
     global pt
-    global text
-    text.delete('1.0', END)
     filename = filedialog.askopenfilename(initialdir = "Dataset")
-    text.delete('1.0', END)
-    text.insert(END,'Dataset loaded\n\n')
     dataset = pd.read_csv(filename)
     dataset.fillna(0, inplace = True)
 
+    '''font1 = ('times', 12, 'bold')
+    text=Text(main,height=30,width=120)
+    scroll=Scrollbar(text)
+    text.configure(yscrollcommand=scroll.set)
+    text.place(x=10,y=160)
+    text.config(font=font1)'''
 
-    '''text.insert(END,str(dataset.head())+"\n\n")
-    text.insert(END,"Dataset contains total records    : "+str(dataset.shape[0])+"\n")
-    text.insert(END,"Dataset contains total attributes : "+str(dataset.shape[1])+"\n")'''
+    text = Output(30,120,10,160)
 
     pt = Table(text,dataframe = dataset,width = 850, height=500)
     pt.autoResizeColumns()
@@ -77,15 +77,15 @@ def processDataset():
     global X, Y
     global dataset
     global pt
-    global text
     
     pt.remove()
-    text=Text(main,height=30,width=120)
+    '''text=Text(main,height=30,width=120)
     text.config(font= ('times', 12, 'bold'))
     scroll=Scrollbar(text)
     text.configure(yscrollcommand=scroll.set)
-    text.place(x=10,y=160)
-    text.delete('1.0', END)
+    text.place(x=10,y=160)'''
+
+    text = Output(30,120,10,160)
 
     le = LabelEncoder()
     dataset['Level'] = pd.Series(le.fit_transform(dataset['Level'].astype(str)))
@@ -107,21 +107,23 @@ def processDataset():
     
     
 def runEnsemble():
-    global classifier,text
+    global classifier
     global  X_train, X_test, y_train, y_test
     global X, Y
 
     pt.remove()
-    text=Text(main,height=30,width=120)
+    '''text=Text(main,height=30,width=120)
     text.config(font= ('times', 12, 'bold'))
     scroll=Scrollbar(text)
     text.configure(yscrollcommand=scroll.set)
     text.place(x=10,y=160)
-    text.delete('1.0', END)
+    text.delete('1.0', END)'''
+
+    text = Output(15,80,170,300)
 
 
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
-    text.insert(END,"Total dataset records : "+str(X.shape[0])+"\n" )
+    text.insert(END,"\n\nTotal dataset records : "+str(X.shape[0])+"\n" )
     text.insert(END,"Total dataset records used to train algorithms : "+str(X_train.shape[0])+"\n")
     text.insert(END,"Total dataset records used to test algorithms  : "+str(X_test.shape[0])+"\n\n")
     dt = DecisionTreeClassifier()
@@ -141,18 +143,21 @@ def runEnsemble():
     r = recall_score(y_test, predict,average='micro') * 100
     f = f1_score(y_test, predict,average='micro') * 100
     a = accuracy_score(y_test,predict)*100
-    text.insert(END,"Ensemble of Decision Tree, MLP and AdaBoost Performance Result\n\n")
+    text.insert(END,"\nEnsemble of Decision Tree, MLP and AdaBoost Performance Result\n\n")
     text.insert(END,"Ensemble Algorithms Precision : "+str(p)+"\n")
     text.insert(END,"Ensemble Algorithms Recall    : "+str(r)+"\n")
     text.insert(END,"Ensemble Algorithms FMeasure  : "+str(f)+"\n")
     text.insert(END,"Ensemble Algorithms Accuracy  : "+str(a)+"\n")
+    text.tag_configure("center", justify='center')
+    text.tag_add("center", "1.0", "end")
     classifier = vc
     
 
 def predict():
     global classifier
-    global text
-    text.delete('1.0', END)
+
+
+
     filename = filedialog.askopenfilename(initialdir="Dataset")
     test = pd.read_csv(filename)
     data = test.values
@@ -161,6 +166,15 @@ def predict():
     predict = classifier.predict(data)
     print(predict)
     test = test.values
+
+    font1 = ('times', 12, 'bold')
+    text=Text(main,height=30,width=120)
+    scroll=Scrollbar(text)
+    text.configure(yscrollcommand=scroll.set)
+    text.place(x=10,y=160)
+    text.config(font=font1)
+    text.delete('1.0', END)
+
     for i in range(len(predict)):
         result = 'High'
         if predict[i] == 0:
@@ -173,8 +187,16 @@ def predict():
         
 
 def trainRBF():
-    global rbf_classifier,text               
+    global rbf_classifier               
+    
+    font1 = ('times', 12, 'bold')
+    text=Text(main,height=30,width=120)
+    scroll=Scrollbar(text)
+    text.configure(yscrollcommand=scroll.set)
+    text.place(x=10,y=160)
+    text.config(font=font1)
     text.delete('1.0', END)
+
     filename = filedialog.askdirectory(initialdir = ".")
     if os.path.exists('model/model.txt'):
         with open('model/model.txt', 'rb') as file:
@@ -231,8 +253,16 @@ def trainRBF():
         file.close()
                
 def predictCTscan():
-    global rbf_classifier,text
+    global rbf_classifier
+
+    font1 = ('times', 12, 'bold')
+    text=Text(main,height=30,width=120)
+    scroll=Scrollbar(text)
+    text.configure(yscrollcommand=scroll.set)
+    text.place(x=10,y=160)
+    text.config(font=font1)
     text.delete('1.0', END)
+
     filename = filedialog.askopenfilename(initialdir="testImages")
     img = cv2.imread(filename)
     img = cv2.resize(img, (10,10))
@@ -318,13 +348,6 @@ predictButton.place(x=1040,y=570)
 predictButton.config(font=font1)
 changeOnHover(predictButton, "#6C9DDA", "white")
 Shadow(predictButton, size=2, offset_x=2, offset_y=2, onhover={'size':4, 'offset_x':4, 'offset_y':4})
-
-font1 = ('times', 12, 'bold')
-text=Text(main,height=30,width=120)
-scroll=Scrollbar(text)
-text.configure(yscrollcommand=scroll.set)
-text.place(x=10,y=160)
-text.config(font=font1)
 
 
 main.config(bg="#3F3E3E")
