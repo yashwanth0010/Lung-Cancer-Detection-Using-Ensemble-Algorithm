@@ -6,6 +6,7 @@ from pandastable import Table
 import numpy as np
 import time
 from tkinter import filedialog
+from PIL import ImageTk, Image
 import pandas as pd 
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score
@@ -21,21 +22,22 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import normalize
 from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier 
+from sklearn.svm import SVC
 import pickle
 import os
 import cv2
 from Shadow import Shadow
 
-global main,filename,dataset, X_train, X_test, y_train, y_test,classifier,rbf_classifier,pt
+global main,filename,dataset, X_train, X_test, y_train, y_test,classifier,rbf_classifier,pt,panel, text
 
 main = tkinter.Tk()
 main.title("Lung Cancer Detection Using Ensemble Algorithm")
 main.geometry("1920x1080")
 
 
-def Output(height=30,width=120,x=10,y=160):
-    font1 = ('times', 12, 'bold')
-    text=Text(main,height=height,width=width)
+def Output(height=30,width=120,x=10,y=160,color = "#514B4B",size=12):
+    font1 = ('times', size, 'bold')
+    text=Text(main,height=height,width=width, bg=color, fg="#FFFFFF")
     scroll=Scrollbar(text)
     text.configure(yscrollcommand=scroll.set)
     text.place(x=x,y=y)
@@ -43,22 +45,14 @@ def Output(height=30,width=120,x=10,y=160):
     return text
 
 def upload():
-    global filename
-    global dataset
-    global main
-    global pt
+    global filename,dataset,main,pt,panel,text
+
     filename = filedialog.askopenfilename(initialdir = "Dataset")
     dataset = pd.read_csv(filename)
     dataset.fillna(0, inplace = True)
 
-    '''font1 = ('times', 12, 'bold')
-    text=Text(main,height=30,width=120)
-    scroll=Scrollbar(text)
-    text.configure(yscrollcommand=scroll.set)
-    text.place(x=10,y=160)
-    text.config(font=font1)'''
-
     text = Output(30,120,10,160)
+    panel.destroy()
 
     pt = Table(text,dataframe = dataset,width = 850, height=500)
     pt.autoResizeColumns()
@@ -74,89 +68,71 @@ def upload():
     plt.show()
 
 def processDataset():
-    global X, Y
-    global dataset
-    global pt
+    global X, Y, dataset,pt,text
+
     
     pt.remove()
-    '''text=Text(main,height=30,width=120)
-    text.config(font= ('times', 12, 'bold'))
-    scroll=Scrollbar(text)
-    text.configure(yscrollcommand=scroll.set)
-    text.place(x=10,y=160)'''
-
+    text.destroy()
     text = Output(30,120,10,160)
 
     le = LabelEncoder()
     dataset['Level'] = pd.Series(le.fit_transform(dataset['Level'].astype(str)))
     dataset['Patient Id'] = pd.Series(le.fit_transform(dataset['Patient Id'].astype(str)))
-    text.insert(END,str(dataset.head())+"\n\n")
+
     X = dataset.values[:,1:dataset.shape[1]-1]
     Y = dataset.values[:,dataset.shape[1]-1]
     Y = Y.astype('int')
     X = normalize(X)
-    print(X)
-    print(Y)
 
     pt = Table(text,dataframe = dataset,width = 850, height=500)
     pt.autoResizeColumns()
     pt.show()
 
-    #text.insert(END,"Dataset contains total records : "+str(X.shape[0])+"\n")
-    #text.insert(END,"Dataset contains total Features: "+str(X.shape[1])+"\n")
     
     
 def runEnsemble():
-    global classifier
-    global  X_train, X_test, y_train, y_test
-    global X, Y
+    global classifier,X_train, X_test, y_train, y_test,X, Y, text
 
     pt.remove()
-    '''text=Text(main,height=30,width=120)
-    text.config(font= ('times', 12, 'bold'))
-    scroll=Scrollbar(text)
-    text.configure(yscrollcommand=scroll.set)
-    text.place(x=10,y=160)
-    text.delete('1.0', END)'''
-
+    text.destroy()
     text = Output(15,80,170,300)
 
 
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+
     text.insert(END,"\n\nTotal dataset records : "+str(X.shape[0])+"\n" )
+    text.insert(END,"Total dataset Features : "+str(X.shape[1])+"\n" )
     text.insert(END,"Total dataset records used to train algorithms : "+str(X_train.shape[0])+"\n")
     text.insert(END,"Total dataset records used to test algorithms  : "+str(X_test.shape[0])+"\n\n")
+
     dt = DecisionTreeClassifier()
     ada_boost = AdaBoostClassifier(n_estimators=100, random_state=0)
     mlp = MLPClassifier(max_iter=200,hidden_layer_sizes=100,random_state=42)
     knn= KNeighborsClassifier(n_neighbors=5, metric='minkowski', p=2 ) 
+    svm = SVC(kernel ='sigmoid',probability=True)
 
-    knn.fit(X_train,y_train)
-    print("Knn result")
-    print(knn.predict(X_test))
-
-
-    vc = VotingClassifier(estimators=[('dt', dt), ('ab', ada_boost), ('mlp', mlp), ('knn',knn)], voting='soft')
+    vc = VotingClassifier(estimators=[('dt', dt), ('ab', ada_boost), ('mlp', mlp), ('knn',knn), ('svm', svm)], voting='soft')
     vc.fit(X_train, y_train)
     predict = vc.predict(X_test) 
+
     p = precision_score(y_test, predict,average='micro') * 100
     r = recall_score(y_test, predict,average='micro') * 100
     f = f1_score(y_test, predict,average='micro') * 100
     a = accuracy_score(y_test,predict)*100
-    text.insert(END,"\nEnsemble of Decision Tree, MLP and AdaBoost Performance Result\n\n")
+
+    text.insert(END,"\nEnsemble of Decision Tree, MLP, AdaBoost, Knn and SVM Performance Result\n\n")
     text.insert(END,"Ensemble Algorithms Precision : "+str(p)+"\n")
     text.insert(END,"Ensemble Algorithms Recall    : "+str(r)+"\n")
     text.insert(END,"Ensemble Algorithms FMeasure  : "+str(f)+"\n")
     text.insert(END,"Ensemble Algorithms Accuracy  : "+str(a)+"\n")
     text.tag_configure("center", justify='center')
     text.tag_add("center", "1.0", "end")
+
     classifier = vc
     
 
 def predict():
-    global classifier
-
-
+    global classifier,text
 
     filename = filedialog.askopenfilename(initialdir="Dataset")
     test = pd.read_csv(filename)
@@ -164,16 +140,11 @@ def predict():
     data = data[:,1:data.shape[1]]
     data = normalize(data)
     predict = classifier.predict(data)
-    print(predict)
     test = test.values
 
-    font1 = ('times', 12, 'bold')
-    text=Text(main,height=30,width=120)
-    scroll=Scrollbar(text)
-    text.configure(yscrollcommand=scroll.set)
-    text.place(x=10,y=160)
-    text.config(font=font1)
-    text.delete('1.0', END)
+    text.destroy()
+    text = Output(24,120,40,200)
+     
 
     for i in range(len(predict)):
         result = 'High'
@@ -183,19 +154,19 @@ def predict():
             result = 'Low. CT Scan Not Required'
         if predict[i] == 2:
             result = 'Medium. CT Scan Maybe Required'
-        text.insert(END,"Test Values : "+str(test[i])+" Predicted Disease Status : "+result+"\n\n")
+        text.insert(END,"\nTest Values : "+str(test[i])+" Predicted Disease Status : "+result+"\n")
+        text.tag_add("start", "1.1", "1.9") 
+        text.tag_config("start", background="black", foreground="red")
+    text.tag_configure("center", justify='center')
+    text.tag_add("center", "1.0", "end")
         
 
 def trainRBF():
-    global rbf_classifier               
+    global rbf_classifier,text
     
-    font1 = ('times', 12, 'bold')
-    text=Text(main,height=30,width=120)
-    scroll=Scrollbar(text)
-    text.configure(yscrollcommand=scroll.set)
-    text.place(x=10,y=160)
-    text.config(font=font1)
-    text.delete('1.0', END)
+    text.destroy()
+    text = Output(2,60,130,350,"#3F3E3E",21)
+
 
     filename = filedialog.askdirectory(initialdir = ".")
     if os.path.exists('model/model.txt'):
@@ -207,8 +178,23 @@ def trainRBF():
         X = np.reshape(X, (X.shape[0],(X.shape[1]*X.shape[2]*X.shape[3])))
         X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
         predict = rbf_classifier.predict(X_test)
+
+        p = precision_score(y_test, predict) * 100
+        r = recall_score(y_test, predict) * 100
+        s = recall_score(y_test, predict, pos_label=0) * 100
+        f = f1_score(y_test, predict) * 100
+        a = accuracy_score(y_test,predict)*100
+        print("precision score: ", p)
+        print("recall score: ", r)
+        print("specificity: ",s)
+        print("f1 score: ",f)
+        print("accuracy : ",a)
         svm_acc = accuracy_score(y_test,predict)*100
+
         text.insert(END,"RBF training accuracy : "+str(svm_acc)+"\n\n")
+        text.tag_configure("center", justify='center')
+        text.tag_add("center", "1.0", "end")
+
     else:
         X = []
         Y = []
@@ -248,20 +234,18 @@ def trainRBF():
         predict = rbf_classifier.predict(X_test)
         svm_acc = accuracy_score(y_test,predict)*100
         text.insert(END,"RBF training accuracy : "+str(svm_acc)+"\n\n")
+        text.tag_configure("center", justify='center')
+        text.tag_add("center", "1.0", "end")
         with open('model/model.txt', 'wb') as file:
             pickle.dump(rbf_classifier, file)
         file.close()
                
 def predictCTscan():
-    global rbf_classifier
+    global rbf_classifier,text
 
-    font1 = ('times', 12, 'bold')
-    text=Text(main,height=30,width=120)
-    scroll=Scrollbar(text)
-    text.configure(yscrollcommand=scroll.set)
-    text.place(x=10,y=160)
-    text.config(font=font1)
-    text.delete('1.0', END)
+    text.destroy()
+    #text = Output(30,120,10,160)
+
 
     filename = filedialog.askopenfilename(initialdir="testImages")
     img = cv2.imread(filename)
@@ -287,11 +271,18 @@ def predictCTscan():
     if(msg == "Uploaded CT Scan is Normal"):
         cv2.putText(img, msg, (10, 25),  cv2.FONT_HERSHEY_SIMPLEX,0.7, (51, 204, 51), 2)
     else:
-        cv2.putText(img, msg, (10, 25),  cv2.FONT_HERSHEY_SIMPLEX,0.7, (255,0,0), 2)
-    #cv2.imshow(msg, img)
-    #cv2.waitKey(0)   
-    plt.imshow(img) 
+        cv2.putText(img, msg, (10, 25),  cv2.FONT_HERSHEY_SIMPLEX,0.7, (0,0,255), 2)
+
+    cv2.imwrite("x.jpg", img)
+    image = Image.open("./x.jpg")
+    img = image.resize((380, 380))
+    img = ImageTk.PhotoImage(img)
+    panel = Label(main, image=img)
+    panel.place(x=300,y=250)
+    plt.imshow(img)
     plt.show()
+   
+     
     
 
 
@@ -349,6 +340,13 @@ predictButton.config(font=font1)
 changeOnHover(predictButton, "#6C9DDA", "white")
 Shadow(predictButton, size=2, offset_x=2, offset_y=2, onhover={'size':4, 'offset_x':4, 'offset_y':4})
 
+
+
+image = Image.open('./lung-cancer.jpg')
+img = image.resize((380, 380))
+img = ImageTk.PhotoImage(img)
+panel = Label(main, image=img)
+panel.place(x=300,y=250)
 
 main.config(bg="#3F3E3E")
 main.mainloop()

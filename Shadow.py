@@ -1,58 +1,9 @@
 import tkinter as tk
 import numpy as np
 class Shadow(tk.Tk):
-    '''
-    Add shadow to a widget
-    
-    This class adds a squared shadow to a widget. The size, the position, and
-    the color of the shadow can be customized at wills. Different shadow
-    behaviors can also be specified when hovering or clicking on the widget,
-    with binding autonomously performed when initializing the shadow. If the
-    widget has a 'command' function, it will be preserved when updating the
-    shadow appearance.
-    Note that enough space around the widget is required for the shadow to
-    correctly appear. Moreover, other widgets nearer than shadow's size will be
-    covered by the shadow.
-    '''
+
     def __init__(self, widget, color='#212121', size=5, offset_x=0, offset_y=0,
                  onhover={}, onclick={}):
-        '''
-        Bind shadow to a widget.
-
-        Parameters
-        ----------
-        widget : tkinter widget
-            Widgets to which shadow should be binded.
-        color : str, optional
-            Shadow color in hex notation. The default is '#212121'.
-        size : int or float, optional
-            Size of the shadow. If int type, it is the size of the shadow out
-            from the widget bounding box. If float type, it is a multiplier of
-            the widget bounding box (e.g. if size=2. then shadow is double in
-            size with respect to widget). The default is 5.
-        offset_x : int, optional
-            Offset by which shadow will be moved in the horizontal axis. If
-            positive, shadow moves toward right direction. The default is 0.
-        offset_y : int, optional
-            Offset by which shadow will be moved in the vertical axis. If
-            positive, shadow moves toward down direction. The default is 0.
-        onhover : dict, optional
-            Specify the behavior of the shadow when widget is hovered. Keys may
-            be: 'size', 'color', 'offset_x', 'offset_y'. If a key-value pair is
-            not provided, normal behavior is maintained for that key. The
-            default is {}.
-        onclick : dict, optional
-            Specify the behavior of the shadow when widget is clicked. Keys may
-            be: 'size', 'color', 'offset_x', 'offset_y'. If a key-value pair is
-            not provided, normal behavior is maintained for that key. The
-            default is {}.
-
-        Returns
-        -------
-        None.
-
-        '''
-        # Save parameters
         self.widget = widget
         self.normal_size = size
         self.normal_color = color
@@ -106,23 +57,19 @@ class Shadow(tk.Tk):
         self.display()
     
     def __destroy_lines(self):
-        ''' Destroy previous shadow lines '''
+        
         for ll in self.__lines:
             ll.destroy()
         self.__lines = []
     
     def display(self):
-        ''' Destroy shadow according to selected configuration '''
+        
         def _rgb2hex(rgb):
-            """
-            Translates an rgb tuple of int to hex color
-            """
+           
             return "#%02x%02x%02x" % rgb
     
         def _hex2rgb(h):
-                """
-                Translates an hex color to rgb tuple of int
-                """
+               
                 h = h.strip('#')
                 return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
         
